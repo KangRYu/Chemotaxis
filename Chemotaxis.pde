@@ -6,6 +6,7 @@ int lengthOfGeneration = 100;
  {   
 	// Style settings
 	noStroke();
+	textAlign(CENTER, CENTER);
  	size(500, 500);
 	// Fill array with bacteria instances
 	newGeneration();
@@ -32,6 +33,14 @@ int lengthOfGeneration = 100;
 	}
  }
 
+ float calculateDistance(Bacteria obj, float x, float y) { // Calculates the distance between an object and a point
+	float distance;
+	float xDistance = obj.x - x;
+	float yDistance = obj.y - y;
+	distance = (float)(Math.sqrt(pow(xDistance, 2) + pow(yDistance, 2)));
+	return distance;
+ }
+
  class Bacteria    
  {     
  	float x;
@@ -49,6 +58,10 @@ int lengthOfGeneration = 100;
 	void show() {
 		fill(myColor);
 		ellipse(x, y, 10, 10);
+		// Debug text
+		textSize(10);
+		fill(30);
+		text(calculateDistance(this, 0, 0), x, y - 10);
 	}
 
 	void update() {
