@@ -1,6 +1,6 @@
- //declare bacteria variables here   
-
-Bacteria[] allBacteria = new Bacteria[100];
+Bacteria[] allBacteria = new Bacteria[100]; // Array holding all bacteria instances
+int frameElapsed = 0;
+int lengthOfGeneration = 100;
 
  void setup()   
  {   
@@ -8,20 +8,29 @@ Bacteria[] allBacteria = new Bacteria[100];
 	noStroke();
  	size(500, 500);
 	// Fill array with bacteria instances
-	for(int i = 0; i < allBacteria.length; i++) {
-		allBacteria[i] = new Bacteria();
-	}
+	newGeneration();
  }   
 
  void draw()   
  {    
 	background(200);
+	if(frameElapsed > lengthOfGeneration) {
+		newGeneration();
+		frameElapsed = 0;
+	}
 	// Calls all bacteria once
 	for(Bacteria i : allBacteria) {
 		i.show();
 		i.update();
 	}
+	frameElapsed++;
  }  
+
+ void newGeneration() {
+	for(int i = 0; i < allBacteria.length; i++) {
+		allBacteria[i] = new Bacteria();
+	}
+ }
 
  class Bacteria    
  {     
