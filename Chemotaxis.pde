@@ -1,10 +1,12 @@
 Bacteria[] allBacteria = new Bacteria[100]; // Array holding all bacteria instances
 int frameElapsed = 0; // The frame elapsed, that is added per frame
-int generationLength = 100; // The frames in one generation
-float[] goalPoint; // The point the bacteria is trying to get to
 
- void setup()   
- {   
+// Simulation settings
+int generationLength = 100; // The frames in one generation
+Vector goalPoint; // The point the bacteria is trying to get to
+float mutationRate = 50; // The mutation rate as a percentage
+
+ void setup() {   
 	// Style settings
 	noStroke();
 	textAlign(CENTER, CENTER);
@@ -12,14 +14,13 @@ float[] goalPoint; // The point the bacteria is trying to get to
 	// Fill array with bacteria instances
 	newGeneration();
 	// Set the goal point
-	goalPoint = new float[]{width/2, height/2};
+	goalPoint = new Vector(width/2, height/2);
  }   
 
- void draw()   
- {    
+ void draw() {    
 	background(200);
 	// Checks if the generation is over, and if it is, then start a new generation
-	if(frameElapsed > generationLength) {
+	if(frameElapsed == generationLength) {
 		newGeneration();
 		frameElapsed = 0;
 	}
@@ -37,26 +38,33 @@ float[] goalPoint; // The point the bacteria is trying to get to
 	}
  }
 
+ void newMutatedGeneration() { // Creates a new generation based on the previous winners
+ }
+
  float calculateDistance(Bacteria obj) { // Calculates the distance between the object position and the goal point
 	float distance;
-	float xDistance = obj.position.x - goalPoint[0]; // Find the horizontal difference
-	float yDistance = obj.position.y - goalPoint[1];
+	float xDistance = obj.position.x - goalPoint.x; // Find the horizontal difference
+	float yDistance = obj.position.y - goalPoint.y;
 	distance = (float)(Math.sqrt(pow(xDistance, 2) + pow(yDistance, 2)));
 	return distance;
  }
 
- class Bacteria    
- {     
+ class Bacteria {     
+	Vector origin; // The starting point of the Bacteria
  	Vector position; // A vector containing the position of the bacteria
-	Vector[] path;
+	Vector[] path; // An array containing the displacement of the bacteria in each frame
+	int pathIndex = 0; // The current index of the path array
 	int myColor;
 	Bacteria() {
 		// Randomize bacteria position
 		float x = (float)(Math.random() * width);
 		float y = (float)(Math.random() * height);
-		position = new Vector(x, y);
+		origin = new Vector(x, y);
+		position = origin;
 		// Randomize bacteria color
 		myColor = color((float)(Math.random() * 255), (float)(Math.random() * 255), (float)(Math.random() * 255));
+		// Creates a path for the bacteria
+		generatePath();
 	} 
 	void show() {
 		fill(myColor);
@@ -67,14 +75,27 @@ float[] goalPoint; // The point the bacteria is trying to get to
 		text(calculateDistance(this), position.x, position.y - 10);
 	}
 	void move() {
-		position.x += (float)(Math.random() * 10 - 5);
-		position.y += (float)(Math.random() * 10 - 5);
+		if(pathIndex < generationLength - 1) {
+			pathIndex ++;
+		}
+		position.add(path[pathIndex]);
 	}
-	void generatePath() { // Generates an array of length equal to generation length that hold the path points
+	void generatePath() { // Generates the path for the bacteria
 		path = new Vector[generationLength]; // Create a new array of generation length
-		for(int i = 0; i < path.length; i++) {
-			path
-		} 
+		for(int i = 0; i < path.length; i++) { // Fills path with random displacements
+			path[i] = new Vector((float)(Math.random() * 10 - 5), (float)(Math.random() * 10 - 5));
+		}
+	}
+	void mutate() { // Mutates the bacteria path
+		for(Vector displacement : path) {
+			if(Math.random() * 100 < mutationRate) { // Decides whether to mutate the current displacement
+				displacement = new Vector((float)(Math.random() * 10 - 5), (float)(Math.random() * 10 - 5));
+			}
+		}
+	}
+	void reset() { // Resets position and index of the bacteria
+		pathIndex = 0;
+		position = new Vector(origin.x, origin.y);
 	}
  }    
 
@@ -84,5 +105,9 @@ float[] goalPoint; // The point the bacteria is trying to get to
 	Vector(float argX, float argY) {
 		x = argX;
 		y = argY;
+	}
+	void add(Vector argVector) { // Adds vector with another
+		x += argVector.x;
+		y += argVector.y;
 	}
  }
