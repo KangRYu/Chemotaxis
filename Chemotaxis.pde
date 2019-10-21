@@ -19,9 +19,9 @@ float mutationRate = 50; // The mutation rate as a percentage
 
  void draw() {    
 	background(200);
-	// Checks if the generation is over, and if it is, then start a new generation
+	// Checks if the generation is over, and if it is, then start a new mutated generation
 	if(frameElapsed == generationLength) {
-		newGeneration();
+		newMutatedGeneration();
 		frameElapsed = 0;
 	}
 	// Calls all bacteria once
@@ -39,6 +39,18 @@ float mutationRate = 50; // The mutation rate as a percentage
  }
 
  void newMutatedGeneration() { // Creates a new generation based on the previous winners
+	Bacteria winner = allBacteria[0]; // A bacteria containing the sole winner
+	for(Bacteria i : allBacteria) { // Goes through all bacteria, so that winner stores the closest bacteria to the goal
+		if(calculateDistance(i) < calculateDistance(winner)) {
+			winner = i;
+		}
+	}
+	allBacteria[0] = winner; // Set first bacteria to winner
+	allBacteria[0].reset(); // Reset the winner
+	for(int i = 1; i < allBacteria.length; i++) { // Create a new generation based on winner
+		allBacteria[i] = allBacteria[0]; // Clones winner
+		allBacteria[i].mutate(); // Mutates clone
+	}
  }
 
  float calculateDistance(Bacteria obj) { // Calculates the distance between the object position and the goal point
@@ -69,10 +81,6 @@ float mutationRate = 50; // The mutation rate as a percentage
 	void show() {
 		fill(myColor);
 		ellipse(position.x, position.y, 10, 10);
-		// Debug text
-		textSize(10);
-		fill(30);
-		text(calculateDistance(this), position.x, position.y - 10);
 	}
 	void move() {
 		if(pathIndex < generationLength - 1) {
