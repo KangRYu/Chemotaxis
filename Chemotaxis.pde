@@ -4,13 +4,14 @@ int frameElapsed = 0; // The frame elapsed, that is added per frame
 // Simulation settings
 int generationLength = 100; // The frames in one generation
 Vector goalPoint; // The point the bacteria is trying to get to
-float mutationRate = 50; // The mutation rate as a percentage
+float mutationRate = 20; // The mutation rate as a percentage
 
  void setup() {   
 	// Style settings
 	noStroke();
 	textAlign(CENTER, CENTER);
  	size(500, 500);
+	rectMode(CENTER);
 	// Fill array with bacteria instances
 	newGeneration();
 	// Set the goal point
@@ -19,6 +20,10 @@ float mutationRate = 50; // The mutation rate as a percentage
 
  void draw() {    
 	background(200);
+
+	fill(255, 0, 0);
+	rect(goalPoint.x, goalPoint.y, 50, 50);
+
 	// Checks if the generation is over, and if it is, then start a new mutated generation
 	if(frameElapsed == generationLength) {
 		newMutatedGeneration();
@@ -39,16 +44,19 @@ float mutationRate = 50; // The mutation rate as a percentage
  }
 
  void newMutatedGeneration() { // Creates a new generation based on the previous winners
-	Bacteria winner = allBacteria[0]; // A bacteria containing the sole winner
+ 	// Stores a copy of the winner into the winner variable
+	Bacteria winner = new Bacteria();
+	winner.copy(allBacteria[0], true);
 	for(Bacteria i : allBacteria) { // Goes through all bacteria, so that winner stores the closest bacteria to the goal
 		if(calculateDistance(i) < calculateDistance(winner)) {
-			winner = i;
+			winner.copy(i, true);
 		}
 	}
-	allBacteria[0] = winner; // Set first bacteria to winner
+	System.out.println(calculateDistance(winner));
+	allBacteria[0].copy(winner, true); // Set first bacteria to winner
 	allBacteria[0].reset(); // Reset the winner
 	for(int i = 1; i < allBacteria.length; i++) { // Create a new generation based on winner
-		allBacteria[i] = allBacteria[0]; // Clones winner
+		allBacteria[i].copy(allBacteria[0], false); // Clones winner
 		allBacteria[i].mutate(); // Mutates clone
 	}
  }
@@ -68,11 +76,9 @@ float mutationRate = 50; // The mutation rate as a percentage
 	int pathIndex = 0; // The current index of the path array
 	int myColor;
 	Bacteria() {
-		// Randomize bacteria position
-		float x = (float)(Math.random() * width);
-		float y = (float)(Math.random() * height);
-		origin = new Vector(x, y);
-		position = origin;
+		// Starting position
+		origin = new Vector(0, 0);
+		position = new Vector(origin.x, origin.y);
 		// Randomize bacteria color
 		myColor = color((float)(Math.random() * 255), (float)(Math.random() * 255), (float)(Math.random() * 255));
 		// Creates a path for the bacteria
@@ -95,10 +101,21 @@ float mutationRate = 50; // The mutation rate as a percentage
 		}
 	}
 	void mutate() { // Mutates the bacteria path
-		for(Vector displacement : path) {
+		for(int i = 0; i < path.length; i++) {
 			if(Math.random() * 100 < mutationRate) { // Decides whether to mutate the current displacement
-				displacement = new Vector((float)(Math.random() * 10 - 5), (float)(Math.random() * 10 - 5));
+				path[i] = new Vector((float)(Math.random() * 10 - 5), (float)(Math.random() * 10 - 5));
 			}
+		}
+	}
+	void copy(Bacteria target, boolean copyColor) { // Copys the values of another bacteria
+		origin = new Vector(target.origin.x, target.origin.y);
+		position = new Vector(target.position.x, target.position.y);
+		pathIndex = target.pathIndex;
+		for(int i = 0; i < path.length; i++) {
+			path[i] = target.path[i];
+		}
+		if(copyColor) {
+			myColor = target.myColor;
 		}
 	}
 	void reset() { // Resets position and index of the bacteria
