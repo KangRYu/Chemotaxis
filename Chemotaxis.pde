@@ -1,5 +1,7 @@
+// Simulation states
 Bacteria[] allBacteria = new Bacteria[100]; // Array holding all bacteria instances
 int frameElapsed = 0; // The frame elapsed, that is added per frame
+int generationsElapsed = 0; // The number of generations elapsed
 
 // Simulation settings
 int generationLength = 100; // The frames in one generation
@@ -10,7 +12,7 @@ float mutationRate = 20; // The mutation rate as a percentage
 	// Style settings
 	noStroke();
 	textAlign(CENTER, CENTER);
- 	size(500, 500);
+ 	size(700, 500);
 	rectMode(CENTER);
 	// Fill array with bacteria instances
 	newGeneration();
@@ -19,20 +21,41 @@ float mutationRate = 20; // The mutation rate as a percentage
  }   
 
  void draw() {    
-	background(200);
+	background(30);
 
+	// Draws grid
+	fill(50);
+	for(int x = 10; x < width - 200; x += 10) {
+		for(int y = 10; y < height; y += 10) {
+			rect(x, y, 9, 9, 2);
+		}
+	}
+
+	// Draws goal point
 	fill(255, 0, 0);
-	rect(goalPoint.x, goalPoint.y, 50, 50);
+	rect(goalPoint.x, goalPoint.y, 9, 9, 2);
+
+	// Draws side bars
+	textSize(20);
+	fill(240);
+	text("Generation " + generationsElapsed, width - 100, 70);
 
 	// Checks if the generation is over, and if it is, then start a new mutated generation
 	if(frameElapsed == generationLength) {
 		newMutatedGeneration();
 		frameElapsed = 0;
+		generationsElapsed++; // Iterate the number of generations
 	}
 	// Calls all bacteria once
 	for(Bacteria i : allBacteria) {
 		i.show();
 		i.move();
+	}
+	// Draws an indicator if there is a winner
+	if(generationsElapsed > 0) {
+		Vector position = allBacteria[0].position;
+		fill(230, 0, 0);
+		triangle(position.x, position.y - 15, position.x - 15, position.y - 50, position.x + 15, position.y - 50);
 	}
 	frameElapsed++; // Iterate the framerate
  }  
@@ -77,10 +100,10 @@ float mutationRate = 20; // The mutation rate as a percentage
 	int myColor;
 	Bacteria() {
 		// Starting position
-		origin = new Vector(0, 0);
+		origin = new Vector(10, 10);
 		position = new Vector(origin.x, origin.y);
 		// Randomize bacteria color
-		myColor = color((float)(Math.random() * 255), (float)(Math.random() * 255), (float)(Math.random() * 255));
+		myColor = color((float)(Math.random() * 155) + 100, (float)(Math.random() * 155) + 100, (float)(Math.random() * 155) + 100);
 		// Creates a path for the bacteria
 		generatePath();
 	} 
@@ -97,13 +120,13 @@ float mutationRate = 20; // The mutation rate as a percentage
 	void generatePath() { // Generates the path for the bacteria
 		path = new Vector[generationLength]; // Create a new array of generation length
 		for(int i = 0; i < path.length; i++) { // Fills path with random displacements
-			path[i] = new Vector((float)(Math.random() * 10 - 5), (float)(Math.random() * 10 - 5));
+			path[i] = new Vector((int)(Math.random() * 3 - 1) * 10, (int)(Math.random() * 3 - 1) * 10);
 		}
 	}
 	void mutate() { // Mutates the bacteria path
 		for(int i = 0; i < path.length; i++) {
 			if(Math.random() * 100 < mutationRate) { // Decides whether to mutate the current displacement
-				path[i] = new Vector((float)(Math.random() * 10 - 5), (float)(Math.random() * 10 - 5));
+				path[i] = new Vector((int)(Math.random() * 3 - 1) * 10, (int)(Math.random() * 3 - 1) * 10);
 			}
 		}
 	}
