@@ -2,6 +2,7 @@
 Bacteria[] allBacteria = new Bacteria[100]; // Array holding all bacteria instances
 int frameElapsed = 0; // The frame elapsed, that is added per frame
 int generationsElapsed = 0; // The number of generations elapsed
+boolean running = false; // If the simulation is running or not
 
 // Simulation settings
 int generationLength = 100; // The frames in one generation
@@ -9,6 +10,8 @@ Vector goalPoint; // The point the bacteria is trying to get to
 float mutationRate = 20; // The mutation rate as a percentage
 
 // UI Objects
+Button playButton;
+Button pauseButton;
 Button resetButton;
 
 // UI States
@@ -25,14 +28,17 @@ void setup() {
 	// Set the goal point
 	goalPoint = new Vector(width/2, height/2);
 	// Instance ui elements
-	resetButton = new Button(new Vector(width - 100, 400), new Vector(100, 30), color(240), "Reset");
+	playButton = new Button(new Vector(width - 140, 140), new Vector(70, 30), color(131, 255, 89), "Play", color(50));
+	pauseButton = new Button(new Vector(width - 60, 140), new Vector(70, 30), color(255, 84, 84), "Pause", color(50));
+	resetButton = new Button(new Vector(width - 100, 180), new Vector(100, 30), color(50), "Reset", color(240));
 }
 
 void mouseClicked() {
 	mouseButtonClicked = true;
 }
 
-void draw() {    
+void draw() {
+	// Redraws the background
 	background(30);
 
 	// Draws grid
@@ -48,18 +54,26 @@ void draw() {
 	rect(goalPoint.x, goalPoint.y, 9, 9, 2);
 
 	// Draws ui on sidebar
+	rectMode(CORNER);
+	fill(0);
+	rect(width - 187, 43, 175, 180, 5); // Draw ui panel drop shadow
+	fill(240);
+	rect(width - 190, 40, 175, 180, 5); // Draw ui panel
+	rectMode(CENTER);
 	// Draws generation text counter
 	textSize(20);
-	fill(240);
+	fill(30);
 	text("Generation " + generationsElapsed, width - 100, 70);
 	// Draws generation visual counter
+	fill(50);
 	rectMode(CORNER);
+	rect(width - 175, 100, 150, 10);
 	fill(131, 255, 89);
 	rect(width - 175, 100, 150 * ((float)(frameElapsed)/generationLength), 10);
 	rectMode(CENTER);
 	// Draws winner window
 	float x = width - 100; // Local variables to make things easier
-	float y = 200;
+	float y = 400;
 	fill(50);
 	rect(x, y, 70, 70, 5); // Draws panel
 	if(generationsElapsed > 0) { // Only draws winner after the first generation
@@ -83,13 +97,10 @@ void draw() {
 	// Calls all bacteria once
 	for(Bacteria i : allBacteria) {
 		i.show();
-		i.move();
+		if(running) { // Only update bacteria if the simulation is running
+			i.move();
+		}
 	}
-	// Calls all ui elements
-	if(resetButton.update()) {
-		newSet();
-	}
-	resetButton.show();
 	// Draws an indicator if there is a winner
 	if(generationsElapsed > 0) {
 		x = allBacteria[0].position.x;
@@ -99,7 +110,23 @@ void draw() {
 		triangle(x - 20, y - 15, x, y - 50, x + 20, y - 15);
 		triangle(x, y - 15, x + 20, y - 50, x + 20, y - 15);
 	}
-	frameElapsed++; // Iterate the framerate
+	if(running) { // Only iterate the framerate if the simulation is running
+		frameElapsed++;
+	}
+
+	// Calls all ui elements
+	if(playButton.update()) {
+		running = true;
+	}
+	if(pauseButton.update()) {
+		running = false;
+	}
+	if(resetButton.update()) {
+		newSet();
+	}
+	playButton.show();
+	pauseButton.show();
+	resetButton.show();
 	mouseButtonClicked = false;
 }  
 
@@ -209,14 +236,23 @@ class Button { // An object that allows for interactable buttons
 	Vector position;
 	Vector dimensions;
 	int myColor;
+	int textColor;
 	String message; // The text that is displayed on the button
 	boolean pressed = false;
 	boolean hovered = false;
-	Button(Vector argPosition, Vector argDimensions, int argMyColor, String argMessage) {
+	Button(Vector argPosition, Vector argDimensions, int argMyColor, String argMessage) { // The constructer if no text color is specified
 		position = argPosition;
 		dimensions = argDimensions;
 		myColor = argMyColor;
 		message = argMessage;
+		textColor = color(30);
+	}
+	Button(Vector argPosition, Vector argDimensions, int argMyColor, String argMessage, int argTextColor) { // If the text color is specified
+		position = argPosition;
+		dimensions = argDimensions;
+		myColor = argMyColor;
+		message = argMessage;
+		textColor = argTextColor;
 	}
 	boolean update() { // Receives inputs and returns a boolean if button was pressed during frame
 		if(mouseX <= position.x + dimensions.x/2.0 && mouseX >= position.x - dimensions.x/2.0 && mouseY <= position.y + dimensions.y/2.0 && mouseY >= position.y - dimensions.y/2.0) {
@@ -248,7 +284,8 @@ class Button { // An object that allows for interactable buttons
 			fill(myColor);
 		}
 		rect(position.x, position.y, dimensions.x, dimensions.y, 5);
-		fill(30);
+		fill(textColor);
+		textSize(14);
 		text(message, position.x, position.y);
 	}
 }
