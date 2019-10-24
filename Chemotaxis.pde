@@ -1,5 +1,8 @@
+import java.util.*;
+
 // Simulation states
 Bacteria[] allBacteria = new Bacteria[100]; // Array holding all bacteria instances
+List<Wall> allWalls = new ArrayList<Wall>(); // A list holding all the walls
 int frameElapsed = 0; // The frame elapsed, that is added per frame
 int generationsElapsed = 0; // The number of generations elapsed
 boolean running = false; // If the simulation is running or not
@@ -31,6 +34,10 @@ void setup() {
 	playButton = new Button(new Vector(width - 140, 140), new Vector(70, 30), color(131, 255, 89), "Play", color(50));
 	pauseButton = new Button(new Vector(width - 60, 140), new Vector(70, 30), color(255, 84, 84), "Pause", color(50));
 	resetButton = new Button(new Vector(width - 100, 180), new Vector(100, 30), color(50), "Reset", color(240));
+	// Debug
+	for(int y = 10; y < 300; y += 10) {
+		allWalls.add(new Wall(100, y));
+	}
 }
 
 void mouseClicked() {
@@ -49,6 +56,11 @@ void draw() {
 		}
 	}
 
+	// Draws walls
+	for(Wall i : allWalls) {
+		i.show();
+	}
+
 	// Draws goal point
 	fill(255, 0, 0);
 	rect(goalPoint.x, goalPoint.y, 9, 9, 2);
@@ -56,9 +68,9 @@ void draw() {
 	// Draws ui on sidebar
 	rectMode(CORNER);
 	fill(0);
-	rect(width - 187, 43, 175, 180, 5); // Draw ui panel drop shadow
+	rect(width - 187, 43, 180, 400, 5); // Draw ui panel drop shadow
 	fill(240);
-	rect(width - 190, 40, 175, 180, 5); // Draw ui panel
+	rect(width - 190, 40, 180, 400, 5); // Draw ui panel
 	rectMode(CENTER);
 	// Draws generation text counter
 	textSize(20);
@@ -73,7 +85,7 @@ void draw() {
 	rectMode(CENTER);
 	// Draws winner window
 	float x = width - 100; // Local variables to make things easier
-	float y = 400;
+	float y = 250;
 	fill(50);
 	rect(x, y, 70, 70, 5); // Draws panel
 	if(generationsElapsed > 0) { // Only draws winner after the first generation
@@ -156,6 +168,10 @@ void newMutatedGeneration() { // Creates a new generation based on the previous 
 	}
 }
 
+void addWalls() { // Add walls at mouse position
+
+}
+
 float calculateDistance(Bacteria obj) { // Calculates the distance between the object position and the goal point
 	float distance;
 	float xDistance = obj.position.x - goalPoint.x; // Find the horizontal difference
@@ -187,7 +203,13 @@ class Bacteria {
 		if(pathIndex < generationLength - 1) {
 			pathIndex ++;
 		}
-		position.add(path[pathIndex]);
+		if(get((int)(position.x + path[pathIndex].x), (int)(position.y)) != color(255)) {
+			position.x += path[pathIndex].x;
+		}
+		if(get((int)(position.x), (int)(position.y + path[pathIndex].y)) != color(255)) {
+			position.y += path[pathIndex].y;
+		}
+		//position.add(path[pathIndex]);
 	}
 	void generatePath() { // Generates the path for the bacteria
 		path = new Vector[generationLength]; // Create a new array of generation length
@@ -229,6 +251,19 @@ class Vector { // An object that contains 2 dimensional coordinates
 	void add(Vector argVector) { // Adds vector with another
 		x += argVector.x;
 		y += argVector.y;
+	}
+}
+
+class Wall { // A wall that prevents bacteria from going through
+	float x;
+	float y;
+	Wall(float argX, float argY) {
+		x = argX;
+		y = argY;
+	}
+	void show() {
+		fill(255);
+		rect(x, y, 9, 9, 2);
 	}
 }
 
