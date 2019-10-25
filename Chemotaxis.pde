@@ -45,6 +45,8 @@ void mouseClicked() {
 }
 
 void draw() {
+
+	//System.out.println(Math.random() * 3 - 1) * 10);
 	// Redraws the background
 	background(30);
 
@@ -169,7 +171,11 @@ void newMutatedGeneration() { // Creates a new generation based on the previous 
 }
 
 void addWalls() { // Add walls at mouse position
+	allWalls.add(new Wall(mouseX - mouseX % 10, mouseY - mouseY % 10));
+}
 
+void removeWalls() {
+	allWalls.remove(new Wall(mouseX - mouseX % 10, mouseY - mouseY % 10));
 }
 
 float calculateDistance(Bacteria obj) { // Calculates the distance between the object position and the goal point
@@ -220,7 +226,7 @@ class Bacteria {
 	void mutate() { // Mutates the bacteria path
 		for(int i = 0; i < path.length; i++) {
 			if(Math.random() * 100 < mutationRate) { // Decides whether to mutate the current displacement
-				path[i] = new Vector((int)(Math.random() * 3 - 1) * 10, (int)(Math.random() * 3 - 1) * 10);
+				path[i] = new Vector((int)(Math.random() * 4 - 2) * 10, (int)(Math.random() * 4 - 2) * 10);
 			}
 		}
 	}
