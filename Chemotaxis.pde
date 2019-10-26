@@ -1,7 +1,7 @@
 import java.util.*;
 
 // Simulation settings
-int generationLength = 150; // The frames in one generation
+int generationLength = 100; // The frames in one generation
 Vector spawnPoint = new Vector(20, 250);
 Vector goalPoint = new Vector(480, 250); // The point the bacteria is trying to get to
 float mutationRate = 20; // The mutation rate as a percentage
