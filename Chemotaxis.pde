@@ -59,27 +59,27 @@ void setup() {
 void mousePressed() {
 	mouseButtonClicked = true;
 	if(addWalls.toggled) { // For placing objects that only require a single click
-		placeWalls();
+		insertWalls();
 	}
 	else if(removeWalls.toggled) {
-		eraseWalls();
+		terminateWalls();
 	}
 	else if(setGoal.toggled) {
-		placeGoal();
+		insertGoal();
 		setGoal.toggled = false;
 	}
 	else if(setSpawn.toggled) {
-		placeSpawn();
+		insertSpawn();
 		setSpawn.toggled = false;
 	}
 }
 
 void mouseDragged() { // For placing objects when the mouse is dragging
 	if(addWalls.toggled) {
-		placeWalls();
+		insertWalls();
 	}
 	else if(removeWalls.toggled) {
-		eraseWalls();
+		terminateWalls();
 	}
 }
 
@@ -253,7 +253,7 @@ void newMutatedGeneration() { // Creates a new generation based on the previous 
 	generationsElapsed++; // Iterate the number of generations
 }
 
-void placeWalls() { // Add walls at mouse position
+void insertWalls() { // Add walls at mouse position
 	int x = (int)(mouseX - mouseX % 10);
 	int y = (int)(mouseY - mouseY % 10);
 	if(x > 0 && x < 500 && y > 0 && y < 500) { // Only if the point is within the grid
@@ -270,7 +270,7 @@ void placeWalls() { // Add walls at mouse position
 	}
 }
 
-void eraseWalls() {
+void terminateWalls() {
 	int x = (int)(mouseX - mouseX % 10);
 	int y = (int)(mouseY - mouseY % 10);
 	if(x > 0 && x < 500 && y > 0 && y < 500) {
@@ -283,7 +283,7 @@ void eraseWalls() {
 	}
 }
 
-void placeGoal() {
+void insertGoal() {
 	int x = (int)(mouseX - mouseX % 10);
 	int y = (int)(mouseY - mouseY % 10);
 	if(x > 0 && x < 500 && y > 0 && y < 500) {
@@ -291,7 +291,7 @@ void placeGoal() {
 	}
 }
 
-void placeSpawn() {
+void insertSpawn() {
 	int x = (int)(mouseX - mouseX % 10);
 	int y = (int)(mouseY - mouseY % 10);
 	if(x > 0 && x < 500 && y > 0 && y < 500) {
