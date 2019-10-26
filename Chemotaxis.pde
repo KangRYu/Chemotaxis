@@ -11,7 +11,7 @@ int colonySize = 20; // The number of bacteria in a colony
 Bacteria[] allBacteria = new Bacteria[colonySize]; // Array holding all bacteria instances
 List<Wall> allWalls = new ArrayList<Wall>(); // A list holding all the walls
 int frameElapsed = 0; // The frame elapsed, that is added per frame
-int generationsElapsed = 0; // The number of generations elapsed
+int generationsElapsed = 1; // The number of generations elapsed
 boolean running = false; // If the simulation is running or not
 boolean placeWalls = false; // True if the simulation is going to place walls
 boolean eraseWalls = false;
@@ -43,43 +43,43 @@ void setup() {
 	// Fill array with bacteria instances
 	newSet();
 	// Instance ui elements
-	playButton = new Button(new Vector(width - 145, 140), new Vector(70, 30), color(131, 255, 89), "Play", color(50));
-	pauseButton = new Button(new Vector(width - 65, 140), new Vector(70, 30), color(255, 84, 84), "Pause", color(50));
-	resetButton = new Button(new Vector(width - 105, 180), new Vector(100, 30), color(50), "Reset", color(240));
-	increaseNumBacteria = new Button(new Vector(width - 85, 250), new Vector(30, 30), color(50), "+", color(240));
-	decreaseNumBacteria = new Button(new Vector(width - 125, 250), new Vector(30, 30), color(50), "-", color(240));
-	increaseMutationRate = new Button(new Vector(width - 85, 320), new Vector(30, 30), color(50), "+", color(240));
-	decreaseMutationRate = new Button(new Vector(width - 125, 320), new Vector(30, 30), color(50), "-", color(240));
-	addWalls = new Toggle(new Vector(width - 145, 370), new Vector(70, 30), color(50), "+ Walls", color(240));
-	removeWalls = new Toggle(new Vector(width - 65, 370), new Vector(70, 30), color(50), "- Walls", color(240));
-	setGoal = new Toggle(new Vector(width - 145, 410), new Vector(70, 30), color(50), "Set Goal", color(240));
-	setSpawn = new Toggle(new Vector(width - 65, 410), new Vector(70, 30), color(50), "Set Spawn", color(240));
+	playButton = new Button(new Vector(width - 140, 140), new Vector(70, 30), color(131, 255, 89), "Play", color(50));
+	pauseButton = new Button(new Vector(width - 60, 140), new Vector(70, 30), color(255, 84, 84), "Pause", color(50));
+	resetButton = new Button(new Vector(width - 100, 180), new Vector(100, 30), color(50), "Reset", color(240));
+	increaseNumBacteria = new Button(new Vector(width - 80, 250), new Vector(30, 30), color(50), "+", color(240));
+	decreaseNumBacteria = new Button(new Vector(width - 120, 250), new Vector(30, 30), color(50), "-", color(240));
+	increaseMutationRate = new Button(new Vector(width - 80, 320), new Vector(30, 30), color(50), "+", color(240));
+	decreaseMutationRate = new Button(new Vector(width - 120, 320), new Vector(30, 30), color(50), "-", color(240));
+	addWalls = new Toggle(new Vector(width - 140, 370), new Vector(70, 30), color(50), "+ Walls", color(240));
+	removeWalls = new Toggle(new Vector(width - 60, 370), new Vector(70, 30), color(50), "- Walls", color(240));
+	setGoal = new Toggle(new Vector(width - 140, 410), new Vector(70, 30), color(50), "Set Goal", color(240));
+	setSpawn = new Toggle(new Vector(width - 60, 410), new Vector(70, 30), color(50), "Set Spawn", color(240));
 }
 
 void mousePressed() {
 	mouseButtonClicked = true;
 	if(addWalls.toggled) { // For placing objects that only require a single click
-		addWalls();
+		placeWalls();
 	}
 	else if(removeWalls.toggled) {
-		removeWalls();
+		eraseWalls();
 	}
 	else if(setGoal.toggled) {
-		setGoal();
+		placeGoal();
 		setGoal.toggled = false;
 	}
 	else if(setSpawn.toggled) {
-		setSpawn();
+		placeSpawn();
 		setSpawn.toggled = false;
 	}
 }
 
 void mouseDragged() { // For placing objects when the mouse is dragging
 	if(addWalls.toggled) {
-		addWalls();
+		placeWalls();
 	}
 	else if(removeWalls.toggled) {
-		removeWalls();
+		eraseWalls();
 	}
 }
 
@@ -110,9 +110,9 @@ void draw() {
 	// Draws ui panel
 	rectMode(CENTER);
 	fill(0);
-	rect(width - 102, 253, 180, 450, 5); // Draw ui panel drop shadow right
+	rect(width - 97, 253, 180, 450, 5); // Draw ui panel drop shadow right
 	fill(240);
-	rect(width - 105, 250, 180, 450, 5); // Draw ui panel right
+	rect(width - 100, 250, 180, 450, 5); // Draw ui panel right
 	// Draws generation text counter
 	textSize(20);
 	fill(30);
@@ -228,7 +228,7 @@ void newSet() { // Creates a new generation of bacteria
 		allBacteria[i] = new Bacteria();
 	}
 	frameElapsed = 0;
-	generationsElapsed = 0;
+	generationsElapsed = 1;
 }
 
 void newMutatedGeneration() { // Creates a new generation based on the previous winners
@@ -253,7 +253,7 @@ void newMutatedGeneration() { // Creates a new generation based on the previous 
 	generationsElapsed++; // Iterate the number of generations
 }
 
-void addWalls() { // Add walls at mouse position
+void placeWalls() { // Add walls at mouse position
 	int x = (int)(mouseX - mouseX % 10);
 	int y = (int)(mouseY - mouseY % 10);
 	if(x > 0 && x < 500 && y > 0 && y < 500) { // Only if the point is within the grid
@@ -270,7 +270,7 @@ void addWalls() { // Add walls at mouse position
 	}
 }
 
-void removeWalls() {
+void eraseWalls() {
 	int x = (int)(mouseX - mouseX % 10);
 	int y = (int)(mouseY - mouseY % 10);
 	if(x > 0 && x < 500 && y > 0 && y < 500) {
@@ -283,7 +283,7 @@ void removeWalls() {
 	}
 }
 
-void setGoal() {
+void placeGoal() {
 	int x = (int)(mouseX - mouseX % 10);
 	int y = (int)(mouseY - mouseY % 10);
 	if(x > 0 && x < 500 && y > 0 && y < 500) {
@@ -291,7 +291,7 @@ void setGoal() {
 	}
 }
 
-void setSpawn() {
+void placeSpawn() {
 	int x = (int)(mouseX - mouseX % 10);
 	int y = (int)(mouseY - mouseY % 10);
 	if(x > 0 && x < 500 && y > 0 && y < 500) {
