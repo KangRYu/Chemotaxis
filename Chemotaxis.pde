@@ -1,16 +1,15 @@
 import java.util.*;
 
 // Simulation settings
-int generationLength = 200; // The frames in one generation
-Vector spawnPoint = new Vector(10, 10);
-Vector goalPoint = new Vector(250, 250); // The point the bacteria is trying to get to
+int generationLength = 150; // The frames in one generation
+Vector spawnPoint = new Vector(20, 250);
+Vector goalPoint = new Vector(480, 250); // The point the bacteria is trying to get to
 float mutationRate = 20; // The mutation rate as a percentage
-int colonySize = 100; // The number of bacteria in a colony
+int colonySize = 20; // The number of bacteria in a colony
 
 // Simulation states
 Bacteria[] allBacteria = new Bacteria[colonySize]; // Array holding all bacteria instances
 List<Wall> allWalls = new ArrayList<Wall>(); // A list holding all the walls
-float[] history = new float[15]; // A history of previous generations
 int frameElapsed = 0; // The frame elapsed, that is added per frame
 int generationsElapsed = 0; // The number of generations elapsed
 boolean running = false; // If the simulation is running or not
@@ -39,7 +38,7 @@ void setup() {
 	// Style settings
 	noStroke();
 	textAlign(CENTER, CENTER);
- 	size(900, 500);
+ 	size(700, 500);
 	rectMode(CENTER);
 	// Fill array with bacteria instances
 	newSet();
@@ -90,7 +89,7 @@ void draw() {
 
 	// Draws grid
 	fill(50);
-	for(int x = 10; x < width - 400; x += 10) {
+	for(int x = 10; x < width - 200; x += 10) {
 		for(int y = 10; y < height; y += 10) {
 			rect(x, y, 9, 9, 2);
 		}
@@ -104,15 +103,16 @@ void draw() {
 	// Draws goal point
 	fill(255, 0, 0);
 	rect(goalPoint.x, goalPoint.y, 9, 9, 2);
+	// Draws spawn point
+	fill(255, 255, 0);
+	rect(spawnPoint.x, spawnPoint.y, 9, 9, 2);
 
 	// Draws ui panel
 	rectMode(CENTER);
 	fill(0);
 	rect(width - 102, 253, 180, 450, 5); // Draw ui panel drop shadow right
-	rect(width - 292, 253, 180, 450, 5); // Draw ui panel drop shadow left
 	fill(240);
 	rect(width - 105, 250, 180, 450, 5); // Draw ui panel right
-	rect(width - 295, 250, 180, 450, 5); // Draw ui panel left
 	// Draws generation text counter
 	textSize(20);
 	fill(30);
@@ -124,26 +124,6 @@ void draw() {
 	fill(131, 255, 89);
 	rect(width - 175, 100, 150 * ((float)(frameElapsed)/generationLength), 10);
 	rectMode(CENTER);
-	// Draws winner window
-	float x = width - 295; // Local variables to make things easier
-	float y = 100;
-	fill(50);
-	rect(x, y, 70, 70, 5); // Draws panel
-	if(generationsElapsed > 0) { // Only draws winner after the first generation
-		fill(allBacteria[0].myColor);
-		ellipse(x, y, 10, 10); // Draws bacteria
-		fill(255, 250, 97); // Draws crown
-		triangle(x - 10, y - 25, x - 10, y - 7.5, x, y - 7.5);
-		triangle(x - 10, y - 7.5, x, y - 25, x + 10, y - 7.5);
-		triangle(x, y - 7.5, x + 10, y - 25, x + 10, y - 7.5);
-		fill(240);
-		textSize(14);
-	}
-	text("Winner", x, y + 18);
-	// Draw history log
-	textSize(20);
-	fill(30);
-	text("History Log", width - 295, 180);
 	// Calls all ui elements
 	if(playButton.update()) {
 		running = true;
@@ -230,8 +210,8 @@ void draw() {
 	}
 	// Draws an indicator if there is a winner
 	if(generationsElapsed > 0) {
-		x = allBacteria[0].position.x;
-		y = allBacteria[0].position.y;
+		float x = allBacteria[0].position.x;
+		float y = allBacteria[0].position.y;
 		fill(255, 250, 97); // Draws crown
 		triangle(x - 20, y - 50, x - 20, y - 15, x, y - 15);
 		triangle(x - 20, y - 15, x, y - 50, x + 20, y - 15);
@@ -374,7 +354,7 @@ class Bacteria {
 	void generatePath() { // Generates the path for the bacteria
 		path = new Vector[generationLength]; // Create a new array of generation length
 		for(int i = 0; i < path.length; i++) { // Fills path with random displacements
-			path[i] = new Vector((int)(Math.random() * 3 - 1) * 10, (int)(Math.random() * 3 - 1) * 10);
+			path[i] = new Vector(((int)(Math.random() * 3) - 1) * 10, ((int)(Math.random() * 3) - 1) * 10);
 		}
 	}
 	void mutate() { // Mutates the bacteria path
