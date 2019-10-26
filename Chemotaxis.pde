@@ -1,21 +1,36 @@
 import java.util.*;
 
+// Simulation settings
+int generationLength = 200; // The frames in one generation
+Vector spawnPoint = new Vector(10, 10);
+Vector goalPoint = new Vector(250, 250); // The point the bacteria is trying to get to
+float mutationRate = 20; // The mutation rate as a percentage
+int colonySize = 100; // The number of bacteria in a colony
+
 // Simulation states
-Bacteria[] allBacteria = new Bacteria[100]; // Array holding all bacteria instances
+Bacteria[] allBacteria = new Bacteria[colonySize]; // Array holding all bacteria instances
 List<Wall> allWalls = new ArrayList<Wall>(); // A list holding all the walls
+float[] history = new float[15]; // A history of previous generations
 int frameElapsed = 0; // The frame elapsed, that is added per frame
 int generationsElapsed = 0; // The number of generations elapsed
 boolean running = false; // If the simulation is running or not
-
-// Simulation settings
-int generationLength = 100; // The frames in one generation
-Vector goalPoint; // The point the bacteria is trying to get to
-float mutationRate = 20; // The mutation rate as a percentage
+boolean placeWalls = false; // True if the simulation is going to place walls
+boolean eraseWalls = false;
+boolean placeSpawn = false;
+boolean placeGoal = false;
 
 // UI Objects
 Button playButton;
 Button pauseButton;
 Button resetButton;
+Button increaseNumBacteria;
+Button decreaseNumBacteria;
+Button increaseMutationRate;
+Button decreaseMutationRate;
+Toggle addWalls;
+Toggle removeWalls;
+Toggle setGoal;
+Toggle setSpawn;
 
 // UI States
 boolean mouseButtonClicked = false;
@@ -24,35 +39,58 @@ void setup() {
 	// Style settings
 	noStroke();
 	textAlign(CENTER, CENTER);
- 	size(700, 500);
+ 	size(900, 500);
 	rectMode(CENTER);
 	// Fill array with bacteria instances
 	newSet();
-	// Set the goal point
-	goalPoint = new Vector(width/2, height/2);
 	// Instance ui elements
-	playButton = new Button(new Vector(width - 140, 140), new Vector(70, 30), color(131, 255, 89), "Play", color(50));
-	pauseButton = new Button(new Vector(width - 60, 140), new Vector(70, 30), color(255, 84, 84), "Pause", color(50));
-	resetButton = new Button(new Vector(width - 100, 180), new Vector(100, 30), color(50), "Reset", color(240));
-	// Debug
-	for(int y = 10; y < 300; y += 10) {
-		allWalls.add(new Wall(100, y));
+	playButton = new Button(new Vector(width - 145, 140), new Vector(70, 30), color(131, 255, 89), "Play", color(50));
+	pauseButton = new Button(new Vector(width - 65, 140), new Vector(70, 30), color(255, 84, 84), "Pause", color(50));
+	resetButton = new Button(new Vector(width - 105, 180), new Vector(100, 30), color(50), "Reset", color(240));
+	increaseNumBacteria = new Button(new Vector(width - 85, 250), new Vector(30, 30), color(50), "+", color(240));
+	decreaseNumBacteria = new Button(new Vector(width - 125, 250), new Vector(30, 30), color(50), "-", color(240));
+	increaseMutationRate = new Button(new Vector(width - 85, 320), new Vector(30, 30), color(50), "+", color(240));
+	decreaseMutationRate = new Button(new Vector(width - 125, 320), new Vector(30, 30), color(50), "-", color(240));
+	addWalls = new Toggle(new Vector(width - 145, 370), new Vector(70, 30), color(50), "+ Walls", color(240));
+	removeWalls = new Toggle(new Vector(width - 65, 370), new Vector(70, 30), color(50), "- Walls", color(240));
+	setGoal = new Toggle(new Vector(width - 145, 410), new Vector(70, 30), color(50), "Set Goal", color(240));
+	setSpawn = new Toggle(new Vector(width - 65, 410), new Vector(70, 30), color(50), "Set Spawn", color(240));
+}
+
+void mousePressed() {
+	mouseButtonClicked = true;
+	if(addWalls.toggled) { // For placing objects that only require a single click
+		addWalls();
+	}
+	else if(removeWalls.toggled) {
+		removeWalls();
+	}
+	else if(setGoal.toggled) {
+		setGoal();
+		setGoal.toggled = false;
+	}
+	else if(setSpawn.toggled) {
+		setSpawn();
+		setSpawn.toggled = false;
 	}
 }
 
-void mouseClicked() {
-	mouseButtonClicked = true;
+void mouseDragged() { // For placing objects when the mouse is dragging
+	if(addWalls.toggled) {
+		addWalls();
+	}
+	else if(removeWalls.toggled) {
+		removeWalls();
+	}
 }
 
 void draw() {
-
-	//System.out.println(Math.random() * 3 - 1) * 10);
 	// Redraws the background
 	background(30);
 
 	// Draws grid
 	fill(50);
-	for(int x = 10; x < width - 200; x += 10) {
+	for(int x = 10; x < width - 400; x += 10) {
 		for(int y = 10; y < height; y += 10) {
 			rect(x, y, 9, 9, 2);
 		}
@@ -67,13 +105,14 @@ void draw() {
 	fill(255, 0, 0);
 	rect(goalPoint.x, goalPoint.y, 9, 9, 2);
 
-	// Draws ui on sidebar
-	rectMode(CORNER);
-	fill(0);
-	rect(width - 187, 43, 180, 400, 5); // Draw ui panel drop shadow
-	fill(240);
-	rect(width - 190, 40, 180, 400, 5); // Draw ui panel
+	// Draws ui panel
 	rectMode(CENTER);
+	fill(0);
+	rect(width - 102, 253, 180, 450, 5); // Draw ui panel drop shadow right
+	rect(width - 292, 253, 180, 450, 5); // Draw ui panel drop shadow left
+	fill(240);
+	rect(width - 105, 250, 180, 450, 5); // Draw ui panel right
+	rect(width - 295, 250, 180, 450, 5); // Draw ui panel left
 	// Draws generation text counter
 	textSize(20);
 	fill(30);
@@ -86,8 +125,8 @@ void draw() {
 	rect(width - 175, 100, 150 * ((float)(frameElapsed)/generationLength), 10);
 	rectMode(CENTER);
 	// Draws winner window
-	float x = width - 100; // Local variables to make things easier
-	float y = 250;
+	float x = width - 295; // Local variables to make things easier
+	float y = 100;
 	fill(50);
 	rect(x, y, 70, 70, 5); // Draws panel
 	if(generationsElapsed > 0) { // Only draws winner after the first generation
@@ -101,12 +140,86 @@ void draw() {
 		textSize(14);
 	}
 	text("Winner", x, y + 18);
+	// Draw history log
+	textSize(20);
+	fill(30);
+	text("History Log", width - 295, 180);
+	// Calls all ui elements
+	if(playButton.update()) {
+		running = true;
+	}
+	if(pauseButton.update()) {
+		running = false;
+	}
+	if(resetButton.update()) {
+		newSet();
+	}
+	if(increaseNumBacteria.update()) {
+		colonySize += 5;
+	}
+	else if(decreaseNumBacteria.update()) {
+		if(colonySize != 5) { // Prevents it from going to zero
+			colonySize -= 5;
+		}
+	}
+	if(increaseMutationRate.update()) {
+		if(mutationRate != 100) {
+			mutationRate += 5; // Prevents mutation rate from exceeding 100
+		}
+	}
+	else if(decreaseMutationRate.update()) {
+		if(mutationRate != 0) {
+			mutationRate -= 5;
+		}
+	}
+	if(addWalls.update()) {
+		if(addWalls.toggled) {
+			removeWalls.toggled = false;
+			setGoal.toggled = false;
+			setSpawn.toggled = false;
+		}
+	}
+	else if(removeWalls.update()) {
+		if(removeWalls.toggled) {
+			addWalls.toggled = false;
+			setGoal.toggled = false;
+			setSpawn.toggled = false;
+		}
+	}
+	else if(setGoal.update()) {
+		if(setGoal.toggled) {
+			addWalls.toggled = false;
+			removeWalls.toggled = false;
+			setSpawn.toggled = false;
+		}
+	}
+	else if(setSpawn.update()) {
+		if(setSpawn.toggled) {
+			addWalls.toggled = false;
+			removeWalls.toggled = false;
+			setGoal.toggled = false;
+		}
+	}
+	playButton.show();
+	pauseButton.show();
+	resetButton.show();
+	fill(30);
+	text("# of Bacteria: " + colonySize, width - 100, 220);
+	increaseNumBacteria.show();
+	decreaseNumBacteria.show();
+	fill(30);
+	text("Mutation Rate: " + (int)mutationRate + "%", width - 100, 290);
+	increaseMutationRate.show();
+	decreaseMutationRate.show();
+	addWalls.show();
+	removeWalls.show();
+	setGoal.show();
+	setSpawn.show();
+	mouseButtonClicked = false;
 
 	// Checks if the generation is over, and if it is, then start a new mutated generation
 	if(frameElapsed == generationLength) {
 		newMutatedGeneration();
-		frameElapsed = 0;
-		generationsElapsed++; // Iterate the number of generations
 	}
 	// Calls all bacteria once
 	for(Bacteria i : allBacteria) {
@@ -127,24 +240,10 @@ void draw() {
 	if(running) { // Only iterate the framerate if the simulation is running
 		frameElapsed++;
 	}
-
-	// Calls all ui elements
-	if(playButton.update()) {
-		running = true;
-	}
-	if(pauseButton.update()) {
-		running = false;
-	}
-	if(resetButton.update()) {
-		newSet();
-	}
-	playButton.show();
-	pauseButton.show();
-	resetButton.show();
-	mouseButtonClicked = false;
 }  
 
 void newSet() { // Creates a new generation of bacteria
+	allBacteria = new Bacteria[colonySize]; // Creates a new array
 	for(int i = 0; i < allBacteria.length; i++) {
 		allBacteria[i] = new Bacteria();
 	}
@@ -161,21 +260,63 @@ void newMutatedGeneration() { // Creates a new generation based on the previous 
 			winner.copy(i, true);
 		}
 	}
-	System.out.println(calculateDistance(winner));
+	allBacteria = new Bacteria[colonySize]; // Creates a new array
+	allBacteria[0] = new Bacteria(); // Creates a new first bacteria
 	allBacteria[0].copy(winner, true); // Set first bacteria to winner
 	allBacteria[0].reset(); // Reset the winner
 	for(int i = 1; i < allBacteria.length; i++) { // Create a new generation based on winner
+		allBacteria[i] = new Bacteria(); // Creates a new bacteria
 		allBacteria[i].copy(allBacteria[0], false); // Clones winner
 		allBacteria[i].mutate(); // Mutates clone
 	}
+	frameElapsed = 0;
+	generationsElapsed++; // Iterate the number of generations
 }
 
 void addWalls() { // Add walls at mouse position
-	allWalls.add(new Wall(mouseX - mouseX % 10, mouseY - mouseY % 10));
+	int x = (int)(mouseX - mouseX % 10);
+	int y = (int)(mouseY - mouseY % 10);
+	if(x > 0 && x < 500 && y > 0 && y < 500) { // Only if the point is within the grid
+		boolean occupied = false;
+		for(Wall i : allWalls) { // Searches if the spot is already filled
+			if(x == i.x && y == i.y) {
+				occupied = true;
+				break;
+			}
+		}
+		if(occupied == false) {
+			allWalls.add(new Wall(x, y)); // Adds a wall to a closest point to the mouse that is the multiple of ten
+		}
+	}
 }
 
 void removeWalls() {
-	allWalls.remove(new Wall(mouseX - mouseX % 10, mouseY - mouseY % 10));
+	int x = (int)(mouseX - mouseX % 10);
+	int y = (int)(mouseY - mouseY % 10);
+	if(x > 0 && x < 500 && y > 0 && y < 500) {
+		for(Wall i : allWalls) { // Searches if there is an occupied spot and deletes it
+			if(x == i.x && y == i.y) {
+				allWalls.remove(i);
+				break;
+			}
+		}
+	}
+}
+
+void setGoal() {
+	int x = (int)(mouseX - mouseX % 10);
+	int y = (int)(mouseY - mouseY % 10);
+	if(x > 0 && x < 500 && y > 0 && y < 500) {
+		goalPoint = new Vector(x, y);
+	}
+}
+
+void setSpawn() {
+	int x = (int)(mouseX - mouseX % 10);
+	int y = (int)(mouseY - mouseY % 10);
+	if(x > 0 && x < 500 && y > 0 && y < 500) {
+		spawnPoint = new Vector(x, y);
+	}
 }
 
 float calculateDistance(Bacteria obj) { // Calculates the distance between the object position and the goal point
@@ -194,7 +335,7 @@ class Bacteria {
 	int myColor;
 	Bacteria() {
 		// Starting position
-		origin = new Vector(10, 10);
+		origin = new Vector(spawnPoint.x, spawnPoint.y);
 		position = new Vector(origin.x, origin.y);
 		// Randomize bacteria color
 		myColor = color((float)(Math.random() * 154) + 100, (float)(Math.random() * 154) + 100, (float)(Math.random() * 154) + 100);
@@ -211,9 +352,22 @@ class Bacteria {
 		}
 		if(get((int)(position.x + path[pathIndex].x), (int)(position.y)) != color(255)) {
 			position.x += path[pathIndex].x;
+			// Caps position to grid space
+			if(position.x > 490) {
+				position.x = 490;
+			}
+			else if(position.x < 10) {
+				position.x = 10;
+			}
 		}
 		if(get((int)(position.x), (int)(position.y + path[pathIndex].y)) != color(255)) {
 			position.y += path[pathIndex].y;
+			if(position.y > 490) {
+				position.y = 490;
+			}
+			else if(position.y < 10) {
+				position.y = 10;
+			}
 		}
 		//position.add(path[pathIndex]);
 	}
@@ -226,12 +380,11 @@ class Bacteria {
 	void mutate() { // Mutates the bacteria path
 		for(int i = 0; i < path.length; i++) {
 			if(Math.random() * 100 < mutationRate) { // Decides whether to mutate the current displacement
-				path[i] = new Vector((int)(Math.random() * 4 - 2) * 10, (int)(Math.random() * 4 - 2) * 10);
+				path[i] = new Vector(((int)(Math.random() * 3) - 1) * 10, ((int)(Math.random() * 3) - 1) * 10);
 			}
 		}
 	}
 	void copy(Bacteria target, boolean copyColor) { // Copys the values of another bacteria
-		origin = new Vector(target.origin.x, target.origin.y);
 		position = new Vector(target.position.x, target.position.y);
 		pathIndex = target.pathIndex;
 		for(int i = 0; i < path.length; i++) {
@@ -300,7 +453,6 @@ class Button { // An object that allows for interactable buttons
 			hovered = true;
 			if(mouseButtonClicked) {
 				pressed = true; // Updates button state if mouse press is in the button
-				System.out.println("PRESSED");
 				return true;
 			}
 			else {
@@ -316,6 +468,47 @@ class Button { // An object that allows for interactable buttons
 	}
 	void show() { // Draws the button
 		if(pressed) {
+			fill(red(myColor) - 80, green(myColor) - 80, blue(myColor) - 80);
+		}
+		else if(hovered) {
+			fill(red(myColor) - 50, green(myColor) - 50, blue(myColor) - 50);
+		}
+		else {
+			fill(myColor);
+		}
+		rect(position.x, position.y, dimensions.x, dimensions.y, 5);
+		fill(textColor);
+		textSize(14);
+		text(message, position.x, position.y);
+	}
+}
+
+class Toggle extends Button { // A button that visually stays pressed when pressed
+	boolean toggled = false;
+	Toggle(Vector argPosition, Vector argDimensions, int argMyColor, String argMessage) {
+		super(argPosition, argDimensions, argMyColor, argMessage);
+	}
+	Toggle(Vector argPosition, Vector argDimensions, int argMyColor, String argMessage, int argTextColor) {
+		super(argPosition, argDimensions, argMyColor, argMessage, argTextColor);
+	}
+	boolean update() { // Receives inputs and returns a boolean if button was pressed during frame
+		if(mouseX <= position.x + dimensions.x/2.0 && mouseX >= position.x - dimensions.x/2.0 && mouseY <= position.y + dimensions.y/2.0 && mouseY >= position.y - dimensions.y/2.0) {
+			hovered = true;
+			if(mouseButtonClicked) {
+				toggled = !toggled; // Updates button state if mouse press is in the button
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			hovered = false;
+			return false;
+		}
+	}
+	void show() { // Draws the button
+		if(toggled) {
 			fill(red(myColor) - 80, green(myColor) - 80, blue(myColor) - 80);
 		}
 		else if(hovered) {
